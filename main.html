@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rekap Dagang</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #1c1c1e;
+            --text-main: #f2f2f7;
+            --text-muted: #98989d;
+            --accent: #0a84ff;
+            --profit: #30d158;
+            --loss: #ff453a;
+            --separator: #38383a;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100vw;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px; 
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            padding: 32px 24px;
+            overflow-y: auto;
+        }
+
+        .header {
+            margin-bottom: 36px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        .form-section {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 4px 16px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            position: relative;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .form-group:last-child {
+            border-bottom: none;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .currency-symbol {
+            color: var(--text-main);
+            font-size: 18px;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 20px;
+            font-weight: 600;
+            padding: 4px 0;
+            outline: none;
+        }
+
+        .form-group input::placeholder {
+            color: #48484a;
+            font-weight: 500;
+        }
+
+        .btn-hitung {
+            width: 100%;
+            padding: 18px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .btn-hitung:active {
+            opacity: 0.8;
+            transform: scale(0.97);
+        }
+
+        .result-card {
+            margin-top: 32px;
+            padding: 24px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            display: none; 
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+
+        .result-value {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .divider {
+            height: 1px;
+            background-color: var(--separator);
+            margin: 20px 0;
+        }
+
+        .result-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .status-profit {
+            background-color: rgba(48, 209, 88, 0.15);
+            color: var(--profit);
+        }
+
+        .status-loss {
+            background-color: rgba(255, 69, 58, 0.15);
+            color: var(--loss);
+        }
+        
+        .status-neutral {
+            background-color: rgba(10, 132, 255, 0.15);
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            <h1>Rekap Dagang</h1>
+            <p>Kalkulasi modal dan pendapatan harian</p>
+        </div>
+
+        <div class="form-section">
+            <div class="form-group">
+                <label>Modal Masuk (Paylater)</label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">Rp</span>
+                    <input type="text" id="inputModal" placeholder="0" inputmode="numeric" oninput="formatRibuan(this)">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Jumlah Barang</label>
+                <div class="input-wrapper">
+                    <input type="text" id="inputKarton" placeholder="0" inputmode="numeric" oninput="formatRibuan(this)" style="font-size: 18px;">
+                    <span class="currency-symbol" style="margin-left: 8px; margin-right: 0; font-size: 15px; color: var(--text-muted);">Karton</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Harga Jual / Karton</label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">Rp</span>
+                    <input type="text" id="inputHarga" placeholder="0" inputmode="numeric" oninput="formatRibuan(this)">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-hitung" onclick="hitung()">Hitung Hasil</button>
+
+        <!-- Area Hasil -->
+        <div class="result-card" id="resultCard">
+            <div class="result-item">
+                <span>Modal Awal</span>
+                <span class="result-value" id="resModal">Rp 0</span>
+            </div>
+            <div class="result-item">
+                <span>Pendapatan Kotor</span>
+                <span class="result-value" id="resPendapatan" style="color: var(--accent);">Rp 0</span>
+            </div>
+            
+            <!-- Baris Baru: Untung Per Karton -->
+            <div class="result-item" id="rowPerKarton" style="display: none;">
+                <span id="labelPerKarton">Selisih / Karton</span>
+                <span class="result-value" id="resPerKarton">Rp 0</span>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="result-total">
+                <span style="color: var(--text-muted); font-size: 14px;">Sisa Tagihan<br><small style="font-size: 11px; font-weight: normal;">(Modal - Pendapatan)</small></span>
+                <span id="resFormula">Rp 0</span>
+            </div>
+
+            <div id="resStatusBadge" class="status-badge status-profit">
+                Menghitung...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatRibuan(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            input.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        function getAngkaMurni(id) {
+            let nilaiString = document.getElementById(id).value;
+            let nilaiAngka = parseFloat(nilaiString.replace(/\./g, ''));
+            return isNaN(nilaiAngka) ? 0 : nilaiAngka;
+        }
+
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', { 
+                style: 'currency', 
+                currency: 'IDR', 
+                minimumFractionDigits: 0 
+            }).format(angka);
+        }
+
+        function hitung() {
+            const modal = getAngkaMurni('inputModal');
+            const karton = getAngkaMurni('inputKarton');
+            const hargaJual = getAngkaMurni('inputHarga');
+
+            const totalPendapatan = hargaJual * karton;
+            const hasilSesuaiRumus = modal - totalPendapatan;
+            const labaRugiSebenarnya = totalPendapatan - modal;
+            
+            // Hitung untung atau rugi per karton (mencegah dibagi 0 jika input karton kosong)
+            const perKarton = karton > 0 ? (labaRugiSebenarnya / karton) : 0;
+
+            document.getElementById('resultCard').style.display = 'block';
+            
+            document.getElementById('resModal').textContent = formatRupiah(modal);
+            document.getElementById('resPendapatan').textContent = formatRupiah(totalPendapatan);
+            document.getElementById('resFormula').textContent = formatRupiah(hasilSesuaiRumus);
+
+            // Tampilkan baris Per Karton jika jumlah karton diisi lebih dari 0
+            const rowPerKarton = document.getElementById('rowPerKarton');
+            const labelPerKarton = document.getElementById('labelPerKarton');
+            const resPerKarton = document.getElementById('resPerKarton');
+
+            if (karton > 0) {
+                rowPerKarton.style.display = 'flex';
+                if (perKarton > 0) {
+                    labelPerKarton.textContent = 'Untung / Karton';
+                    resPerKarton.textContent = '+' + formatRupiah(perKarton);
+                    resPerKarton.style.color = 'var(--profit)';
+                } else if (perKarton < 0) {
+                    labelPerKarton.textContent = 'Rugi / Karton';
+                    resPerKarton.textContent = '-' + formatRupiah(Math.abs(perKarton));
+                    resPerKarton.style.color = 'var(--loss)';
+                } else {
+                    labelPerKarton.textContent = 'Selisih / Karton';
+                    resPerKarton.textContent = 'Rp 0';
+                    resPerKarton.style.color = 'var(--text-muted)';
+                }
+            } else {
+                rowPerKarton.style.display = 'none';
+            }
+
+            // Update Badge Total
+            const badgeEl = document.getElementById('resStatusBadge');
+            if (labaRugiSebenarnya > 0) {
+                badgeEl.innerHTML = 'Total Untung ' + formatRupiah(labaRugiSebenarnya);
+                badgeEl.className = 'status-badge status-profit';
+            } else if (labaRugiSebenarnya < 0) {
+                badgeEl.innerHTML = 'Total Rugi ' + formatRupiah(Math.abs(labaRugiSebenarnya));
+                badgeEl.className = 'status-badge status-loss';
+            } else {
+                badgeEl.innerHTML = 'Balik Modal (Impas)';
+                badgeEl.className = 'status-badge status-neutral';
+            }
+        }
+    </script>
+</body>
+</html>
